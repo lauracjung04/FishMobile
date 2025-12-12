@@ -30,7 +30,7 @@ The main goals of the project are:
 We have been working on this project for over a year, presenting it at OpenSauce, TN Maker Fest, and at our university. 
 
 - [Press](https://www.hackster.io/news/the-best-of-open-sauce-2025-our-top-9-picks-0d1e72723245#toc--7---goldfish-can-drive-cars-now-2)
-- [Design Process Video!]([https://www.hackster.io/news/the-best-of-open-sauce-2025-our-top-9-picks-0d1e72723245#toc--7---goldfish-can-drive-cars-now-2](https://youtu.be/sza0JBSlZPk?si=AvpnyFDG3D8n4rz9))  
+- [Design Process Video!](https://youtu.be/sza0JBSlZPk?si=AvpnyFDG3D8n4rz9)  
 
 ---
 
