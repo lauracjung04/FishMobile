@@ -1,131 +1,170 @@
 #include <Arduino.h>
+//hey so I'm just gonna write my to-do list here: 
+//some mecanum steering code borrowed from Gavin Ford (on Youtube)
+
+#include <math.h> // include to use sine and cosine for calculating vector trajectory
+
+//===================
+// global variables used in the various functions
+
+const byte buffSize = 32;
+char inputSeveral[buffSize]; // space for 31 chars and a terminator
+
+float inputSpeed = 0.0;
+float inputDirec = 0.0;
 
 // intialize forward drive pins
-int ENA_fwd = 7;
-int IN1_fwd = 6;
-int IN2_fwd = 5;
-int IN3_fwd = 4;
-int IN4_fwd = 3;
-int ENB_fwd = 2;
+int pwr_Rfnt = 13; // ENA "power to tbe Right, Front wheel"
+int fwd_Rfnt = 12; // IN1 "right, front wheel drives forward"
+int bwd_Rfnt = 11; // IN2 "right, front wheel drives backward"
+int fwd_Lfnt = 10; // IN3 "left, front wheel drives forward"
+int bwd_Lfnt = 9; // IN4 "left, front wheel drives backward"
+int pwr_Lfnt = 8; //ENB "power to tbe left, Front wheel"
 
 // intialize rear drive pins
-int ENA_rwd = 13;
-int IN1_rwd = 12;
-int IN2_rwd = 11;
-int IN3_rwd = 10;
-int IN4_rwd = 9;
-int ENB_rwd = 8;
+int pwr_Rbck = 7; //ENA
+int fwd_Rbck = 6; //IN1
+int bwd_Rbck = 5; // IN2
+int fwd_Lbck = 4; // IN3
+int bwd_Lbck = 3; //IN4
+int pwr_Lbck = 2; //ENB
+
+//initialize vector
+double current_power = 0;  // starting power (e.g., 0)
+double target_power = 225; // desired power
+
+double target_theta_deg=0; //will be inputted by fish, degrees
+double target_theta_rad=0;
+double current_theta_rad=0;  
+double mx=0;
+double interp_speed = 0.1; // how fast you want the power to change
+int incomingByte = 0;
 
 void setup() {
-  pinMode(ENA_fwd, OUTPUT);
-  pinMode(ENB_fwd, OUTPUT);
-  pinMode(IN1_fwd, OUTPUT);
-  pinMode(IN2_fwd, OUTPUT);
-  pinMode(IN3_fwd, OUTPUT);
-  pinMode(IN4_fwd, OUTPUT);
+//include serial monitor for debugging (remove later bc it makes it wayyyy slower)
+  Serial.begin (9600); 
 
-  pinMode(ENA_rwd, OUTPUT);
-  pinMode(ENB_rwd, OUTPUT);
-  pinMode(IN1_rwd, OUTPUT);
-  pinMode(IN2_rwd, OUTPUT);
-  pinMode(IN3_rwd, OUTPUT);
-  pinMode(IN4_rwd, OUTPUT);
-  
-  digitalWrite(IN1_fwd, LOW);
-  digitalWrite(IN2_fwd, LOW);
-  digitalWrite(IN3_fwd, LOW);
-  digitalWrite(IN4_fwd, LOW);
+//intialize motor power pins
+  pinMode(pwr_Rfnt, OUTPUT);
+  pinMode(pwr_Lfnt, OUTPUT);
+  pinMode(pwr_Rbck, OUTPUT);
+  pinMode(pwr_Lbck, OUTPUT);
 
-  digitalWrite(IN1_rwd, LOW);
-  digitalWrite(IN2_rwd, LOW);
-  digitalWrite(IN3_rwd, LOW);
-  digitalWrite(IN4_rwd, LOW);
+//intialize motor direction pins
+  pinMode(fwd_Rfnt, OUTPUT);
+  pinMode(bwd_Rfnt, OUTPUT);
+  pinMode(fwd_Lfnt, OUTPUT);
+  pinMode(bwd_Lfnt, OUTPUT);
+  pinMode(fwd_Rbck, OUTPUT);
+  pinMode(bwd_Rbck, OUTPUT);
+  pinMode(fwd_Lbck, OUTPUT);
+  pinMode(bwd_Lbck, OUTPUT);
+
+//initialize motor direction to "off"
+  digitalWrite(fwd_Rfnt, LOW);
+  digitalWrite(bwd_Rfnt, LOW);
+  digitalWrite(fwd_Lfnt, LOW);
+  digitalWrite(bwd_Lfnt, LOW);
+
+  digitalWrite(fwd_Rbck, LOW);
+  digitalWrite(bwd_Rbck, LOW);
+  digitalWrite(fwd_Lbck, LOW);
+  digitalWrite(bwd_Lbck, LOW);
 }
+
 void loop() {
 
-   analogWrite(ENA_fwd, 255);
-  analogWrite(ENB_fwd, 255);
-  digitalWrite(IN1_fwd, HIGH);
-  digitalWrite(IN2_fwd, LOW);
-  digitalWrite(IN3_fwd, HIGH);
-  digitalWrite(IN4_fwd, LOW);
+  readCSV();
+//get a radian vector and power scalar
+  //target_power = new_power();  // Update target power based on fish data or any other input
+  // Interpolate between current power and target power
+  current_power = lerp(current_power, target_power, interp_speed);
 
-  /*setDirection();
-  delay(1000);
-  changeSpeed();
-  delay(1000);
+  //target_theta_deg=new_theta(); //currently pulls from a function (see below), in the future will pull from fish-vector data
+  //target_theta_rad=target_theta_deg*(M_PI/180)+(M_PI/4);
+  // Interpolate between current theta and target theta
+  current_theta_rad = lerp(current_theta_rad, target_theta_rad, interp_speed);
+
+  mx=max(abs(sin(current_theta_rad)), abs(cos(current_theta_rad)));
+
+//set speed (power) and direction of each motor
+  set_direc_pwr(pwr_Rfnt, fwd_Rfnt, bwd_Rfnt, current_power*sin(current_theta_rad)/mx);
+  set_direc_pwr(pwr_Lfnt, fwd_Lfnt, bwd_Lfnt, current_power*cos(current_theta_rad)/mx);
+  set_direc_pwr(pwr_Rbck, fwd_Rbck, bwd_Rbck, current_power*cos(current_theta_rad)/mx);
+  set_direc_pwr(pwr_Lbck, fwd_Lbck, bwd_Lbck, current_power*sin(current_theta_rad)/mx);
+
+  delay(100);
+  
 }
-void setDirection() {
-  analogWrite(ENA_fwd, 255);
-  analogWrite(ENB_fwd, 255);
-  digitalWrite(IN1_fwd, HIGH);
-  digitalWrite(IN2_fwd, LOW);
-  digitalWrite(IN3_fwd, HIGH);
-  digitalWrite(IN4_fwd, LOW);
 
-  analogWrite(ENA_rwd, 255);
-  analogWrite(ENB_rwd, 255);
-  digitalWrite(IN1_rwd, HIGH);
-  digitalWrite(IN2_rwd, LOW);
-  digitalWrite(IN3_rwd, HIGH);
-  digitalWrite(IN4_rwd, LOW);
-  delay(5000);
+void set_direc_pwr (int pwr_mtr, int fwd_mtr, int bwd_mtr, double pwr_funct) {
+  if (pwr_funct>0){ // set forwards
+    digitalWrite(fwd_mtr, HIGH);  //fwd_mtr refers to fwd_Rfnt, fwd_Lbck, etc
+    digitalWrite(bwd_mtr, LOW);   //bwd_mtr refers to bwd_Rfnt, bwd_Lfnt, etc
+  } else { //OR set backwards
+    digitalWrite(fwd_mtr, LOW);
+    digitalWrite(bwd_mtr, HIGH);
+  }
+
+  //set power
+  analogWrite(pwr_mtr, abs(pwr_funct)); //pwr_mtr refers to pwr_Rfnt, pwr_Lbck, etc; pwr_funct refers to sine/cosine function that gives 0-255 value for speed (power)
   
-  digitalWrite(IN1_fwd, LOW);
-  digitalWrite(IN2_fwd, HIGH);
-  digitalWrite(IN3_fwd, LOW);
-  digitalWrite(IN4_fwd, HIGH);
-
-  digitalWrite(IN1_rwd, LOW);
-  digitalWrite(IN2_rwd, HIGH);
-  digitalWrite(IN3_rwd, LOW);
-  digitalWrite(IN4_rwd, HIGH);
-  delay(5000);
-  
-  digitalWrite(IN1_fwd, LOW);
-  digitalWrite(IN2_fwd, LOW);
-  digitalWrite(IN3_fwd, LOW);
-  digitalWrite(IN4_fwd, LOW);
-
-  digitalWrite(IN1_rwd, LOW);
-  digitalWrite(IN2_rwd, LOW);
-  digitalWrite(IN3_rwd, LOW);
-  digitalWrite(IN4_rwd, LOW);
 }
-void changeSpeed() {
-  digitalWrite(IN1_fwd, LOW);
-  digitalWrite(IN2_fwd, HIGH);
-  digitalWrite(IN3_fwd, LOW);
-  digitalWrite(IN4_fwd, HIGH);
 
-  digitalWrite(IN1_rwd, LOW);
-  digitalWrite(IN2_rwd, HIGH);
-  digitalWrite(IN3_rwd, LOW);
-  digitalWrite(IN4_rwd, HIGH);
-  
-  for (int i = 0; i < 256; i++) {
-    analogWrite(ENA_fwd, i);
-    analogWrite(ENA_rwd, i);
-    analogWrite(ENB_fwd, i);
-    analogWrite(ENB_rwd, i);
-    delay(20);
-  }
-  
-  for (int i = 255; i >= 0; --i) {
-    analogWrite(ENA_fwd, i);
-    analogWrite(ENA_rwd, i);
-    analogWrite(ENB_fwd, i);
-    analogWrite(ENB_rwd, i);
-    delay(20);
-  }
-  
-  digitalWrite(IN1_fwd, LOW);
-  digitalWrite(IN2_fwd, LOW);
-  digitalWrite(IN3_fwd, LOW);
-  digitalWrite(IN4_fwd, LOW);
+void stop (int time) {
+  digitalWrite(fwd_Rfnt, LOW);
+  digitalWrite(bwd_Rfnt, LOW);
+  digitalWrite(fwd_Lfnt, LOW);
+  digitalWrite(bwd_Lfnt, LOW);
 
-  digitalWrite(IN1_rwd, LOW);
-  digitalWrite(IN2_rwd, LOW);
-  digitalWrite(IN3_rwd, LOW);
-  digitalWrite(IN4_rwd, LOW);*/
+  digitalWrite(fwd_Rbck, LOW);
+  digitalWrite(bwd_Rbck, LOW);
+  digitalWrite(fwd_Lbck, LOW);
+  digitalWrite(bwd_Lbck, LOW);
+
+  delay(time);
+}
+
+int new_theta(){
+  //readCSV();
+  //target_theta_deg=inputDirec;
+  return target_theta_deg;
+} 
+
+int new_power(){
+  //holds power constant; will eventually increase
+  target_power=225;
+  target_power = constrain(target_power, 0, 255);
+  return target_power;
+}
+
+double lerp(double start, double end, double t) {
+  return start + (end - start) * t;
+}
+
+void readCSV() {
+// Wait until a full line is received
+  if (Serial.available() > 0) {
+    String inputString = Serial.readStringUntil('\n'); // Read entire line
+    inputString.toCharArray(inputSeveral, buffSize); // Convert to char array for strtok()
+
+    char *partOfString = strtok(inputSeveral, ",");
+    if (partOfString != NULL) {
+      inputSpeed = atof(partOfString);  // First CSV value
+    }
+
+    partOfString = strtok(NULL, ",");
+    if (partOfString != NULL) {
+      inputDirec = atof(partOfString);  // Second CSV value 
+    }
+
+    Serial.print("Speed: ");
+    Serial.println(inputSpeed);
+    Serial.print("Direction: ");
+    Serial.println(inputDirec);
+  }
+
+  target_power = constrain(inputSpeed, 0, 255);
+  target_theta_deg=inputDirec;
+  target_theta_rad=target_theta_deg*(M_PI/180)+(M_PI/4);
 }
