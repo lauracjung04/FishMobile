@@ -8,6 +8,7 @@ except ImportError:
     # Fallback for development on non-Raspberry Pi systems
     PiCamera = None
 from time import sleep
+import os
 import time
 
 def get_red_object_coordinates(image_path):
@@ -47,12 +48,18 @@ sleep(1)  # allow warm-up
 
 # Initial capture
 camera.capture_file('prev.jpg')
-prev_coords = get_red_object_coordinates('prev.jpg')
+prev = cv2.imread('prev.jpg')[100:1500, 300:1850]
+prev = cv2.rotate(prev, cv2.ROTATE_90_CLOCKWISE)
+cv2.imwrite('prev_crp.jpg', prev)
+prev_coords = get_red_object_coordinates('prev_crp.jpg')
 
 while True:
     # Capture new image
     camera.capture_file('curr.jpg')
-    curr_coords = get_red_object_coordinates('curr.jpg')
+    curr = cv2.imread('curr.jpg')[100:1500, 300:1850]
+    curr = cv2.rotate(curr, cv2.ROTATE_90_CLOCKWISE)
+    cv2.imwrite('curr_crp.jpg', curr)
+    curr_coords = get_red_object_coordinates('curr_crp.jpg')
 
     # Compare
     distance, direction = calculate_movement(prev_coords, curr_coords)
@@ -64,7 +71,7 @@ while True:
     ser.write(f"{distance:.0f}, {direction:.0f}\n".encode('utf-8'))
 
     # Shift current to previous
-    os.replace('curr.jpg', 'prev.jpg')
+    os.replace('curr_crp.jpg', 'prev_crp.jpg')
     prev_coords = curr_coords
 
     sleep(0.5)  # adjust this delay based on how fast you want to loop
