@@ -10,36 +10,16 @@ except ImportError:
 from time import sleep
 import time
 
-def init_cam():
-    camera = Picamera2()
-    camera.configure(camera.create_still_configuration())
-
-def take_pictures():
-    camera = Picamera2()
-    camera.configure(camera.create_still_configuration())
-    camera.start()
-    sleep(1)
-    camera.capture_file('image1.jpg')
-    sleep(0.1)
-    camera.capture_file('image2.jpg')
-    camera.stop()
-
 def get_red_object_coordinates(image_path):
-    # Read the image
     image = cv2.imread(image_path)
-    # Convert the image to HSV color space
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    # Define the range for red color in HSV
     lower_red = np.array([0, 70, 50])
     upper_red = np.array([10, 255, 255])
-    # Create a mask for red color
     mask = cv2.inRange(hsv, lower_red, upper_red)
-    # Find contours in the mask
     contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    # Find the largest contour
+
     if contours:
         largest_contour = max(contours, key=cv2.contourArea)
-        # Get the coordinates of the center of the largest contour
         M = cv2.moments(largest_contour)
         if M["m00"] != 0:
             cX = int(M["m10"] / M["m00"])
@@ -50,39 +30,41 @@ def get_red_object_coordinates(image_path):
 def calculate_movement(coord1, coord2):
     if coord1 and coord2:
         distance = np.sqrt((coord2[0] - coord1[0])**2 + (coord2[1] - coord1[1])**2)
-        direction = np.arctan2((coord2[1] - coord1[1]), (coord2[0] - coord1[0])) * 180 / np.pi + -90
+        direction = np.arctan2((coord2[1] - coord1[1]), (coord2[0] - coord1[0])) * 180 / np.pi - 90
         return distance, direction
     return None, None
 
-# Step 0: Serial Comms with Arduino!
-ser =serial.Serial('/dev/ttyACM0',9600,timeout=1.0)
-time.sleep(3) # wait for arduino serial to boot up
+# Initialize serial
+ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1.0)
+time.sleep(3)
 ser.reset_input_buffer()
-#print("Serial OK")
 
-#Step 0.5: Initialize Camera
-#init_cam()
-#print("Camera Initialized")
+# Initialize camera
+camera = Picamera2()
+camera.configure(camera.create_still_configuration())
+camera.start()
+sleep(1)  # allow warm-up
 
-# Step 1: Take the two pictures
-take_pictures()
-#print("Two Pics taken")
+# Initial capture
+camera.capture_file('prev.jpg')
+prev_coords = get_red_object_coordinates('prev.jpg')
 
-# Step 2: Get the coordinates of the red object in the first picture
-coords1 = get_red_object_coordinates('image1.jpg')
-#print(f"First coordinates: {coords1}")
+while True:
+    # Capture new image
+    camera.capture_file('curr.jpg')
+    curr_coords = get_red_object_coordinates('curr.jpg')
 
-# Step 3: Wait for 1 seconds
-#sleep(1)
+    # Compare
+    distance, direction = calculate_movement(prev_coords, curr_coords)
+    #print(f"{distance:.0f}, {direction:.0f}")
+    
 
-# Step 4: Take the second picture
-#print("Pic 2")
-#ake_picture('image2.jpg')
+    # Send to Arduino or process here
+    # ser.write(f"{distance},{direction}\n".encode())
+    ser.write(f"{distance:.0f}, {direction:.0f}\n".encode('utf-8'))
 
-# Step 5: Get the coordinates of the red object in the second picture
-coords2 = get_red_object_coordinates('image2.jpg')
-#print(f"Second coordinates: {coords2}")
+    # Shift current to previous
+    os.replace('curr.jpg', 'prev.jpg')
+    prev_coords = curr_coords
 
-# Step 6: Determine the direction and distance the object has moved
-distance, direction = calculate_movement(coords1, coords2)
-print(f"{distance}, {direction}")
+    sleep(0.5)  # adjust this delay based on how fast you want to loop
