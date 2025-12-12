@@ -1,21 +1,24 @@
-import cv2
-import numpy as np
-from picamera import PiCamera
+# to be run on raspberry pi, with opencv and picamera installed
+try:
+    import cv2
+    import numpy as np
+    from picamera2 import Picamera2 # for new library
+    import serial
+except ImportError:
+    # Fallback for development on non-Raspberry Pi systems
+    PiCamera = None
 from time import sleep
-def take_picture(filename):
-    with PiCamera() as camera:
-        camera.resolution = (640, 480)
-        camera.start_preview()
-        sleep(2)  # Give the camera time to adjust
-        camera.capture(filename)
-        camera.stop_preview()
+import os
+import time
+
 def get_red_object_coordinates(image_path):
     image = cv2.imread(image_path)
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     lower_red = np.array([0, 70, 50])
     upper_red = np.array([10, 255, 255])
     mask = cv2.inRange(hsv, lower_red, upper_red)
-    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
     if contours:
         largest_contour = max(contours, key=cv2.contourArea)
         M = cv2.moments(largest_contour)
@@ -24,22 +27,51 @@ def get_red_object_coordinates(image_path):
             cY = int(M["m01"] / M["m00"])
             return (cX, cY)
     return None
+
 def calculate_movement(coord1, coord2):
-    if coord1 is not None and coord2 is not None:
-        distance = np.sqrt((coord2[0] - coord1[0])*2 + (coord2[1] - coord1[1])*2)
-        direction = np.arctan2(coord2[1] - coord1[1], coord2[0] - coord1[0]) * 180 / np.pi
+    if coord1 and coord2:
+        distance = np.sqrt((coord2[0] - coord1[0])**2 + (coord2[1] - coord1[1])**2)
+        direction = np.arctan2((coord2[1] - coord1[1]), (coord2[0] - coord1[0])) * 180 / np.pi - 90
         return distance, direction
     return None, None
-take_picture('image1.jpg')
-coords1 = get_red_object_coordinates('image1.jpg')
-print(f"First coordinates: {coords1}")
-sleep(2)
-take_picture('image2.jpg')
-coords2 = get_red_object_coordinates('image2.jpg')
-print(f"Second coordinates: {coords2}")
-distance, direction = calculate_movement(coords1, coords2)
-if distance is not None and direction is not None:
-    print(f"Distance moved: {distance:.2f} pixels")
-    print(f"Direction moved: {direction:.2f} degrees")
-else:
-    print("Unable to calculate movement")
+
+# Initialize serial
+ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1.0)
+time.sleep(3)
+ser.reset_input_buffer()
+
+# Initialize camera
+camera = Picamera2()
+camera.configure(camera.create_still_configuration())
+camera.start()
+sleep(1)  # allow warm-up
+
+# Initial capture
+camera.capture_file('prev.jpg')
+prev = cv2.imread('prev.jpg')[100:1500, 300:1850]
+prev = cv2.rotate(prev, cv2.ROTATE_90_CLOCKWISE)
+cv2.imwrite('prev_crp.jpg', prev)
+prev_coords = get_red_object_coordinates('prev_crp.jpg')
+
+while True:
+    # Capture new image
+    camera.capture_file('curr.jpg')
+    curr = cv2.imread('curr.jpg')[100:1500, 300:1850]
+    curr = cv2.rotate(curr, cv2.ROTATE_90_CLOCKWISE)
+    cv2.imwrite('curr_crp.jpg', curr)
+    curr_coords = get_red_object_coordinates('curr_crp.jpg')
+
+    # Compare
+    distance, direction = calculate_movement(prev_coords, curr_coords)
+    #print(f"{distance:.0f}, {direction:.0f}")
+    
+
+    # Send to Arduino or process here
+    # ser.write(f"{distance},{direction}\n".encode())
+    ser.write(f"{distance:.0f}, {direction:.0f}\n".encode('utf-8'))
+
+    # Shift current to previous
+    os.replace('curr_crp.jpg', 'prev_crp.jpg')
+    prev_coords = curr_coords
+
+    sleep(0.5)  # adjust this delay based on how fast you want to loop
