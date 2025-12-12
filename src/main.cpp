@@ -1,52 +1,131 @@
 #include <Arduino.h>
 
-/*  Arduino DC Motor Control - PWM | H-Bridge | L298N  -  Example 01
+// intialize forward drive pins
+int ENA_fwd = 7;
+int IN1_fwd = 6;
+int IN2_fwd = 5;
+int IN3_fwd = 4;
+int IN4_fwd = 3;
+int ENB_fwd = 2;
 
-    by Dejan Nedelkovski, www.HowToMechatronics.com
-*/
-
-//#define enA 9
-#define in1 6
-#define in2 7
-//#define button 4
-
-//int rotDirection = 0;
-//int pressed = false;
+// intialize rear drive pins
+int ENA_rwd = 13;
+int IN1_rwd = 12;
+int IN2_rwd = 11;
+int IN3_rwd = 10;
+int IN4_rwd = 9;
+int ENB_rwd = 8;
 
 void setup() {
- // pinMode(enA, OUTPUT);
-  pinMode(in1, OUTPUT);
-  pinMode(in2, OUTPUT);
-  //pinMode(button, INPUT);
-  // Set initial rotation direction
-  digitalWrite(in1, LOW);
-  digitalWrite(in2, HIGH);
+  pinMode(ENA_fwd, OUTPUT);
+  pinMode(ENB_fwd, OUTPUT);
+  pinMode(IN1_fwd, OUTPUT);
+  pinMode(IN2_fwd, OUTPUT);
+  pinMode(IN3_fwd, OUTPUT);
+  pinMode(IN4_fwd, OUTPUT);
+
+  pinMode(ENA_rwd, OUTPUT);
+  pinMode(ENB_rwd, OUTPUT);
+  pinMode(IN1_rwd, OUTPUT);
+  pinMode(IN2_rwd, OUTPUT);
+  pinMode(IN3_rwd, OUTPUT);
+  pinMode(IN4_rwd, OUTPUT);
+  
+  digitalWrite(IN1_fwd, LOW);
+  digitalWrite(IN2_fwd, LOW);
+  digitalWrite(IN3_fwd, LOW);
+  digitalWrite(IN4_fwd, LOW);
+
+  digitalWrite(IN1_rwd, LOW);
+  digitalWrite(IN2_rwd, LOW);
+  digitalWrite(IN3_rwd, LOW);
+  digitalWrite(IN4_rwd, LOW);
 }
+void loop() {
 
-void loop(){
-  //  int potValue = 255; // Read potentiometer value
- // int pwmOutput = map(potValue, 0, 1023, 0 , 255); // Map the potentiometer value from 0 to 255
-//  analogWrite(enA, pwmOutput); // Send PWM signal to L298N Enable pin
+   analogWrite(ENA_fwd, 255);
+  analogWrite(ENB_fwd, 255);
+  digitalWrite(IN1_fwd, HIGH);
+  digitalWrite(IN2_fwd, LOW);
+  digitalWrite(IN3_fwd, HIGH);
+  digitalWrite(IN4_fwd, LOW);
 
-  // Read button - Debounce
- //. if (digitalRead(button) == true) {
-  //  pressed = !pressed;
- // }
- // while (digitalRead(button) == true);
-  //delay(20);
+  /*setDirection();
+  delay(1000);
+  changeSpeed();
+  delay(1000);
+}
+void setDirection() {
+  analogWrite(ENA_fwd, 255);
+  analogWrite(ENB_fwd, 255);
+  digitalWrite(IN1_fwd, HIGH);
+  digitalWrite(IN2_fwd, LOW);
+  digitalWrite(IN3_fwd, HIGH);
+  digitalWrite(IN4_fwd, LOW);
 
-  // If button is pressed - change rotation direction
-  //if (pressed == true  & rotDirection == 0) {
-  //  digitalWrite(in1, HIGH);
-  //  digitalWrite(in2, LOW);
-  //  rotDirection = 1;
-  //  delay(20);
-  //}
-  // If button is pressed - change rotation direction
-  //if (pressed == false & rotDirection == 1) {
-  //  digitalWrite(in1, LOW);
-   // digitalWrite(in2, HIGH);
-  //  rotDirection = 0;
-  //  delay(20);
-  //}
+  analogWrite(ENA_rwd, 255);
+  analogWrite(ENB_rwd, 255);
+  digitalWrite(IN1_rwd, HIGH);
+  digitalWrite(IN2_rwd, LOW);
+  digitalWrite(IN3_rwd, HIGH);
+  digitalWrite(IN4_rwd, LOW);
+  delay(5000);
+  
+  digitalWrite(IN1_fwd, LOW);
+  digitalWrite(IN2_fwd, HIGH);
+  digitalWrite(IN3_fwd, LOW);
+  digitalWrite(IN4_fwd, HIGH);
+
+  digitalWrite(IN1_rwd, LOW);
+  digitalWrite(IN2_rwd, HIGH);
+  digitalWrite(IN3_rwd, LOW);
+  digitalWrite(IN4_rwd, HIGH);
+  delay(5000);
+  
+  digitalWrite(IN1_fwd, LOW);
+  digitalWrite(IN2_fwd, LOW);
+  digitalWrite(IN3_fwd, LOW);
+  digitalWrite(IN4_fwd, LOW);
+
+  digitalWrite(IN1_rwd, LOW);
+  digitalWrite(IN2_rwd, LOW);
+  digitalWrite(IN3_rwd, LOW);
+  digitalWrite(IN4_rwd, LOW);
+}
+void changeSpeed() {
+  digitalWrite(IN1_fwd, LOW);
+  digitalWrite(IN2_fwd, HIGH);
+  digitalWrite(IN3_fwd, LOW);
+  digitalWrite(IN4_fwd, HIGH);
+
+  digitalWrite(IN1_rwd, LOW);
+  digitalWrite(IN2_rwd, HIGH);
+  digitalWrite(IN3_rwd, LOW);
+  digitalWrite(IN4_rwd, HIGH);
+  
+  for (int i = 0; i < 256; i++) {
+    analogWrite(ENA_fwd, i);
+    analogWrite(ENA_rwd, i);
+    analogWrite(ENB_fwd, i);
+    analogWrite(ENB_rwd, i);
+    delay(20);
+  }
+  
+  for (int i = 255; i >= 0; --i) {
+    analogWrite(ENA_fwd, i);
+    analogWrite(ENA_rwd, i);
+    analogWrite(ENB_fwd, i);
+    analogWrite(ENB_rwd, i);
+    delay(20);
+  }
+  
+  digitalWrite(IN1_fwd, LOW);
+  digitalWrite(IN2_fwd, LOW);
+  digitalWrite(IN3_fwd, LOW);
+  digitalWrite(IN4_fwd, LOW);
+
+  digitalWrite(IN1_rwd, LOW);
+  digitalWrite(IN2_rwd, LOW);
+  digitalWrite(IN3_rwd, LOW);
+  digitalWrite(IN4_rwd, LOW);*/
 }
