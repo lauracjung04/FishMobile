@@ -1,19 +1,28 @@
-import cv2
-import numpy as np
-from picamera2 import Picamera2 # for new library
+# to be run on raspberry pi, with opencv and picamera installed
+try:
+    import cv2
+    import numpy as np
+    from picamera2 import Picamera2 # for new library
+    import serial
+except ImportError:
+    # Fallback for development on non-Raspberry Pi systems
+    PiCamera = None
 from time import sleep
+import time
 
-def take_picture(filename):
+def init_cam():
     camera = Picamera2()
     camera.configure(camera.create_still_configuration())
-    camera.resolution=(640,480)
-    #camera.start()
-    camera.start_preview() #picture!
-    sleep(2)  
-    camera.capture_file(filename)
-    camera.stop_preview() #picture!
-    #camera.stop()
-    camera.close()
+
+def take_pictures():
+    camera = Picamera2()
+    camera.configure(camera.create_still_configuration())
+    camera.start()
+    sleep(1)
+    camera.capture_file('image1.jpg')
+    sleep(0.1)
+    camera.capture_file('image2.jpg')
+    camera.stop()
 
 def get_red_object_coordinates(image_path):
     # Read the image
@@ -45,24 +54,35 @@ def calculate_movement(coord1, coord2):
         return distance, direction
     return None, None
 
-# Step 1: Take the first picture
-take_picture('image1.jpg')
+# Step 0: Serial Comms with Arduino!
+ser =serial.Serial('/dev/ttyACM0',9600,timeout=1.0)
+time.sleep(3) # wait for arduino serial to boot up
+ser.reset_input_buffer()
+#print("Serial OK")
+
+#Step 0.5: Initialize Camera
+#init_cam()
+#print("Camera Initialized")
+
+# Step 1: Take the two pictures
+take_pictures()
+#print("Two Pics taken")
 
 # Step 2: Get the coordinates of the red object in the first picture
 coords1 = get_red_object_coordinates('image1.jpg')
-print(f"First coordinates: {coords1}")
+#print(f"First coordinates: {coords1}")
 
-# Step 3: Wait for 2 seconds
-sleep(2)
+# Step 3: Wait for 1 seconds
+#sleep(1)
 
 # Step 4: Take the second picture
-take_picture('image2.jpg')
+#print("Pic 2")
+#ake_picture('image2.jpg')
 
 # Step 5: Get the coordinates of the red object in the second picture
 coords2 = get_red_object_coordinates('image2.jpg')
-print(f"Second coordinates: {coords2}")
+#print(f"Second coordinates: {coords2}")
 
 # Step 6: Determine the direction and distance the object has moved
 distance, direction = calculate_movement(coords1, coords2)
-print(f"Distance moved: {distance} pixels")
-print(f"Direction moved: {direction} degrees")
+print(f"{distance}, {direction}")
