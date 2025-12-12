@@ -1,0 +1,45 @@
+import cv2
+import numpy as np
+from picamera import PiCamera
+from time import sleep
+def take_picture(filename):
+    with PiCamera() as camera:
+        camera.resolution = (640, 480)
+        camera.start_preview()
+        sleep(2)  # Give the camera time to adjust
+        camera.capture(filename)
+        camera.stop_preview()
+def get_red_object_coordinates(image_path):
+    image = cv2.imread(image_path)
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    lower_red = np.array([0, 70, 50])
+    upper_red = np.array([10, 255, 255])
+    mask = cv2.inRange(hsv, lower_red, upper_red)
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    if contours:
+        largest_contour = max(contours, key=cv2.contourArea)
+        M = cv2.moments(largest_contour)
+        if M["m00"] != 0:
+            cX = int(M["m10"] / M["m00"])
+            cY = int(M["m01"] / M["m00"])
+            return (cX, cY)
+    return None
+def calculate_movement(coord1, coord2):
+    if coord1 is not None and coord2 is not None:
+        distance = np.sqrt((coord2[0] - coord1[0])*2 + (coord2[1] - coord1[1])*2)
+        direction = np.arctan2(coord2[1] - coord1[1], coord2[0] - coord1[0]) * 180 / np.pi
+        return distance, direction
+    return None, None
+take_picture('image1.jpg')
+coords1 = get_red_object_coordinates('image1.jpg')
+print(f"First coordinates: {coords1}")
+sleep(2)
+take_picture('image2.jpg')
+coords2 = get_red_object_coordinates('image2.jpg')
+print(f"Second coordinates: {coords2}")
+distance, direction = calculate_movement(coords1, coords2)
+if distance is not None and direction is not None:
+    print(f"Distance moved: {distance:.2f} pixels")
+    print(f"Direction moved: {direction:.2f} degrees")
+else:
+    print("Unable to calculate movement")
