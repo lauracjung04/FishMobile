@@ -107,5 +107,5 @@ Contributions are welcome!
 - Please follow proper coding standards and provide documentation for changes
 
 ---
-##License
-This project is licensed under the **MIT LIcense** See [License}(LICENSE.txt)
+## License
+This project is licensed under the **MIT License** See [License](LICENSE.txt)
