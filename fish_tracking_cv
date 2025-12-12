@@ -1,21 +1,18 @@
-# to be run on raspberry pi, with opencv and picamera installed
-try:
-    import cv2
-    import numpy as np
-    from picamera import PiCamera
-except ImportError:
-    # Fallback for development on non-Raspberry Pi systems
-    PiCamera = None
-
+import cv2
+import numpy as np
+from picamera2 import Picamera2 # for new library
 from time import sleep
 
 def take_picture(filename):
-    camera = PiCamera()
-    camera.resolution = (640, 480)
-    camera.start_preview()
+    camera = Picamera2()
+    camera.configure(camera.create_still_configuration())
+    camera.resolution=(640,480)
+    #camera.start()
+    camera.start_preview() #picture!
     sleep(2)  
-    camera.capture(filename)
-    camera.stop_preview()
+    camera.capture_file(filename)
+    camera.stop_preview() #picture!
+    #camera.stop()
     camera.close()
 
 def get_red_object_coordinates(image_path):
