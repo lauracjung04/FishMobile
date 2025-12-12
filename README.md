@@ -12,7 +12,7 @@ The Wright Brothers made history when they successfully took the first flight, m
 - [Hardware Setup](#hardware-setup)  
 - [Software Setup](#software-setup)
 - [Serial Communication](#serial-communication)
-- [Usage] (#usage)
+- [Usage](#usage)  
 - [Contributing](#contributing)  
 - [License](#license)  
 
