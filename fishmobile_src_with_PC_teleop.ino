@@ -1,6 +1,6 @@
-#include <Arduino.h>
-//hey so I'm just gonna write my to-do list here: 
-//some mecanum steering code borrowed from Gavin Ford (on Youtube)
+//some mecanum steering code inspired by Gavin Ford (on Youtube) + many many edits by me
+//this code is for an arduino board that will be used to control the steering of a mecanum wheel robot
+//this code will read in data Serial port connected to a Raspberry Pi that will send in the speed and direction data for the robot to follow
 
 #include <math.h> // include to use sine and cosine for calculating vector trajectory
 
@@ -158,6 +158,7 @@ void readCSV() {
       inputDirec = atof(partOfString);  // Second CSV value 
     }
 
+//going to comment this out to stop the rasppi from reading it
     Serial.print("Speed: ");
     Serial.println(inputSpeed);
     Serial.print("Direction: ");
