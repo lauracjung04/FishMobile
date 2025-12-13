@@ -4,6 +4,10 @@
 
 The Wright Brothers made history when they successfully took the first flight, making men not merely terrestrial creatures but also aerial creatures. Together with Phoebe Lin and Ria Mirchandani, we are attempting to make the same leap for our aquatic friends. No longer will fish be relegated to the sea but welcome on the land. Now presenting: THE FISHMOBILE, a fish-operated vehicle.
 
+[Live Demo at Open Sauce](https://youtu.be/FGOOzoZ57nk) (ft. a robotic fish)
+
+![Alt text](https://images.squarespace-cdn.com/content/v1/6639961be2f0855f8c34337c/511aca56-f49f-474a-af5a-4cdfc76c18de/IMG_3893.PNG?format=2500w)
+
 ---
 
 ## Table of Contents
@@ -29,8 +33,9 @@ The main goals of the project are:
 
 We have been working on this project for over a year, presenting it at OpenSauce, TN Maker Fest, and at our university. 
 
-- [Press](https://www.hackster.io/news/the-best-of-open-sauce-2025-our-top-9-picks-0d1e72723245#toc--7---goldfish-can-drive-cars-now-2)
-- [Design Process Video!](https://youtu.be/sza0JBSlZPk?si=AvpnyFDG3D8n4rz9)  
+- [Design Process Video!](https://youtu.be/sza0JBSlZPk?si=AvpnyFDG3D8n4rz9)
+- [Press: "Best of OpenSauce"](https://www.hackster.io/news/the-best-of-open-sauce-2025-our-top-9-picks-0d1e72723245#toc--7---goldfish-can-drive-cars-now-2)
+- [Live Demo at Open Sauce](https://youtu.be/FGOOzoZ57nk)
 
 ---
 
@@ -71,13 +76,13 @@ sudo apt update
 sudo apt install python3-opencv python3-picamera python3-pip
 pip3 install pyserial
 ```
-
-2. Download fish_tracking_cv to your RaspPi
+2. Download [fish_tracking_cv](fish_tracking_cv) to your RaspPi
 
 
 ### Arduino
-1. Open main.cpp in VSC code (from src folder)
-2. Upload file to Arduino MEGA board
+1. Open [fishmobile_src_with_PC_teleop.ino](fishmobile_src_with_PC_teleop.ino) in the Arduino IDE
+2. Set board to MEGA
+3. Compile and upload
 
 ---
 ## Serial Communication
@@ -92,10 +97,10 @@ pip3 install pyserial
   - RaspPi and Arduino serial connection
   - Battery to Arduino & motor drivers
 2.  Ensure files are downloaded:
-  - Open fish_tracking_cv on RaspPi desktop / Remote Desktop
+  - Open [fish_tracking_cv](fish_tracking_cv) on RaspPi desktop / Remote Desktop
    - Terminal is not recommended
-  - Load main.cpp onto the Arduino mega
-3. Run fish_tracking_cv
+  - Load [fishmobile_src_with_PC_teleop.ino](fishmobile_src_with_PC_teleop.ino) onto the Arduino mega
+3. Run [fish_tracking_cv](fish_tracking_cv)
 
 ---
 ## Contributing
