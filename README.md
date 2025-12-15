@@ -45,7 +45,6 @@ This project was inspired by the research paper:
 
 Key takeaways from the paper:  
 - Integration of vision-based control with microcontroller-driven motors  
-- Use of serial communication for real-time control
 - Integration of a fish tank for fish-controlled moton
 - Use of mecanum wheels for 3 DOFS of movement (complete X, Y, Z, & roll)
 
